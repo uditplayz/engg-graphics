@@ -1,7 +1,7 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/controls/OrbitControls.js';
-import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/geometries/TextGeometry.js';
+import * as THREE from '../libs/three.module.js';
+import { OrbitControls } from '../libs/examples/jsm/controls/OrbitControls.js';
+import { FontLoader } from '../libs/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from '../libs/examples/jsm/geometries/TextGeometry.js';
 
 class SceneManager {
     constructor(containerID) {

@@ -1,9 +1,28 @@
+/**
+ * @file Contains the PlanesProjection class for the projection of planes topic.
+ */
+
 import * as THREE from '../../libs/three.module.js';
 
+/**
+ * @class PlanesProjection
+ * @classdesc A topic module for visualizing a plane in 3D space and its orientation.
+ */
 class PlanesProjection {
+    /**
+     * @constructor
+     * @param {SceneManager} sceneManager An instance of the SceneManager.
+     * @param {UIManager} uiManager An instance of the UIManager.
+     */
     constructor(sceneManager, uiManager) {
+        /** @type {SceneManager} Reference to the SceneManager. */
         this.sceneManager = sceneManager;
+        /** @type {UIManager} Reference to the UIManager. */
         this.uiManager = uiManager;
+        /**
+         * @type {{size: number, rotX: number, rotY: number, rotZ: number}}
+         * The parameters for the plane, including its size and rotation angles.
+         */
         this.params = {
             size: 5,
             rotX: 30,
@@ -12,11 +31,17 @@ class PlanesProjection {
         };
     }
 
+    /**
+     * Loads the topic, creating controls and initial visualization.
+     */
     load() {
         this.createControls();
         this.updateVisualization();
     }
 
+    /**
+     * Creates the UI controls for manipulating the plane's properties.
+     */
     createControls() {
         const html = `
             <h3 class="text-md font-semibold mb-3 text-slate-800">Plane Projection Controls</h3>
@@ -69,6 +94,9 @@ class PlanesProjection {
         this.attachEventListeners();
     }
 
+    /**
+     * Attaches event listeners to the UI controls.
+     */
     attachEventListeners() {
         ['size', 'rotX', 'rotY', 'rotZ'].forEach(param => {
             const slider = document.getElementById(`${param}-slider`);
@@ -82,6 +110,9 @@ class PlanesProjection {
         });
     }
 
+    /**
+     * Updates the 3D visualization based on the current parameters.
+     */
     updateVisualization() {
         this.sceneManager.clearSimulation();
 
@@ -118,6 +149,10 @@ class PlanesProjection {
         this.updateInfo();
     }
 
+    /**
+     * Adds spheres at the corners of the plane for better visualization.
+     * @param {THREE.Mesh} plane The plane mesh whose corners are to be marked.
+     */
     addCornerSpheres(plane) {
         const sphereGeometry = new THREE.SphereGeometry(0.15, 16, 16);
         const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
@@ -138,6 +173,9 @@ class PlanesProjection {
         });
     }
 
+    /**
+     * Updates the information overlay with the current plane analysis.
+     */
     updateInfo() {
         this.uiManager.updateInfoOverlay(`
             <h4 class="font-bold text-slate-800">Plane Analysis</h4>
@@ -157,6 +195,9 @@ class PlanesProjection {
         `);
     }
 
+    /**
+     * Cleans up the topic by clearing all simulation objects.
+     */
     cleanup() {
         this.sceneManager.clearSimulation();
     }

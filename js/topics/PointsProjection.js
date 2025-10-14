@@ -1,18 +1,44 @@
+/**
+ * @file Contains the PointsProjection class for the projection of points topic.
+ */
+
 import * as THREE from '../../libs/three.module.js';
 
+/**
+ * @class PointsProjection
+ * @classdesc A topic module for visualizing the orthographic projection of a point in 3D space.
+ */
 class PointsProjection {
+    /**
+     * @constructor
+     * @param {SceneManager} sceneManager An instance of the SceneManager.
+     * @param {UIManager} uiManager An instance of the UIManager.
+     */
     constructor(sceneManager, uiManager) {
+        /** @type {SceneManager} Reference to the SceneManager. */
         this.sceneManager = sceneManager;
+        /** @type {UIManager} Reference to the UIManager. */
         this.uiManager = uiManager;
+        /**
+         * @type {{x: number, y: number, z: number}}
+         * The parameters (coordinates) for the point.
+         */
         this.params = { x: 3, y: 4, z: 5 };
+        /** @type {Object<string, THREE.Object3D>} A map to store created 3D objects. */
         this.objects = {};
     }
 
+    /**
+     * Loads the topic, creating controls and initial visualization.
+     */
     load() {
         this.createControls();
         this.updateVisualization();
     }
 
+    /**
+     * Creates the UI controls for manipulating the point's coordinates.
+     */
     createControls() {
         const html = `
             <h3 class="text-md font-semibold mb-3 text-slate-800">Point P (x, y, z) Controls</h3>
@@ -65,6 +91,9 @@ class PointsProjection {
         this.attachEventListeners();
     }
 
+    /**
+     * Attaches event listeners to the UI controls.
+     */
     attachEventListeners() {
         ['x', 'y', 'z'].forEach(axis => {
             const slider = document.getElementById(`${axis}-slider`);
@@ -78,6 +107,10 @@ class PointsProjection {
         });
     }
 
+    /**
+     * Updates the 3D visualization based on the current parameters.
+     * Clears the previous simulation objects and creates new ones.
+     */
     updateVisualization() {
         this.sceneManager.clearSimulation();
 
@@ -113,6 +146,12 @@ class PointsProjection {
         this.updateInfo();
     }
 
+    /**
+     * Creates the dashed lines connecting the main point to its projections.
+     * @param {THREE.Vector3} mainPos The position of the main point.
+     * @param {THREE.Vector3} frontPos The position of the front view projection.
+     * @param {THREE.Vector3} topPos The position of the top view projection.
+     */
     createProjectionLines(mainPos, frontPos, topPos) {
         const lineMaterial = new THREE.LineDashedMaterial({
             color: 0x555555,
@@ -140,6 +179,9 @@ class PointsProjection {
         this.sceneManager.addToSimulation(line);
     }
 
+    /**
+     * Updates the information overlay with the current point analysis.
+     */
     updateInfo() {
         const quadrant = this.getQuadrant();
         
@@ -156,6 +198,10 @@ class PointsProjection {
         `);
     }
 
+    /**
+     * Determines the quadrant of the point based on its Y and Z coordinates.
+     * @returns {string} The name of the quadrant or position.
+     */
     getQuadrant() {
         if (this.params.y > 0 && this.params.z > 0) return "1st Quadrant";
         if (this.params.y > 0 && this.params.z < 0) return "2nd Quadrant";
@@ -164,6 +210,9 @@ class PointsProjection {
         return "On a plane/axis";
     }
 
+    /**
+     * Cleans up the topic by clearing all simulation objects.
+     */
     cleanup() {
         this.sceneManager.clearSimulation();
     }

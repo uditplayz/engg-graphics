@@ -1,9 +1,28 @@
+/**
+ * @file Contains the LinesProjection class for the projection of lines topic.
+ */
+
 import * as THREE from '../../libs/three.module.js';
 
+/**
+ * @class LinesProjection
+ * @classdesc A topic module for visualizing the orthographic projection of a line in 3D space.
+ */
 class LinesProjection {
+    /**
+     * @constructor
+     * @param {SceneManager} sceneManager An instance of the SceneManager.
+     * @param {UIManager} uiManager An instance of the UIManager.
+     */
     constructor(sceneManager, uiManager) {
+        /** @type {SceneManager} Reference to the SceneManager. */
         this.sceneManager = sceneManager;
+        /** @type {UIManager} Reference to the UIManager. */
         this.uiManager = uiManager;
+        /**
+         * @type {{x1: number, y1: number, z1: number, length: number, theta: number, phi: number}}
+         * The parameters for the line, including start point, length, and angles.
+         */
         this.params = {
             x1: 2,
             y1: 2,
@@ -14,11 +33,17 @@ class LinesProjection {
         };
     }
 
+    /**
+     * Loads the topic, creating controls and initial visualization.
+     */
     load() {
         this.createControls();
         this.updateVisualization();
     }
 
+    /**
+     * Creates the UI controls for manipulating the line's properties.
+     */
     createControls() {
         const html = `
             <h3 class="text-md font-semibold mb-3 text-slate-800">Line Projection Controls</h3>
@@ -98,6 +123,9 @@ class LinesProjection {
         this.attachEventListeners();
     }
 
+    /**
+     * Attaches event listeners to the UI controls.
+     */
     attachEventListeners() {
         ['x1', 'y1', 'z1', 'length', 'theta', 'phi'].forEach(param => {
             const slider = document.getElementById(`${param}-slider`);
@@ -111,6 +139,9 @@ class LinesProjection {
         });
     }
 
+    /**
+     * Updates the 3D visualization based on the current parameters.
+     */
     updateVisualization() {
         this.sceneManager.clearSimulation();
 
@@ -151,6 +182,13 @@ class LinesProjection {
         this.updateInfo(start, end);
     }
 
+    /**
+     * Helper function to create a line segment in the scene.
+     * @param {THREE.Vector3} start The starting point of the line.
+     * @param {THREE.Vector3} end The ending point of the line.
+     * @param {number} color The color of the line.
+     * @param {number} linewidth The width of the line.
+     */
     createLine(start, end, color, linewidth) {
         const material = new THREE.LineBasicMaterial({ color, linewidth });
         const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
@@ -158,6 +196,15 @@ class LinesProjection {
         this.sceneManager.addToSimulation(line);
     }
 
+    /**
+     * Creates the dashed projection lines.
+     * @param {THREE.Vector3} start The start point of the main line.
+     * @param {THREE.Vector3} end The end point of the main line.
+     * @param {THREE.Vector3} frontStart The start point of the front view.
+     * @param {THREE.Vector3} frontEnd The end point of the front view.
+     * @param {THREE.Vector3} topStart The start point of the top view.
+     * @param {THREE.Vector3} topEnd The end point of the top view.
+     */
     createProjectionLines(start, end, frontStart, frontEnd, topStart, topEnd) {
         const lineMaterial = new THREE.LineDashedMaterial({
             color: 0x888888,
@@ -181,6 +228,11 @@ class LinesProjection {
         });
     }
 
+    /**
+     * Adds spheres at the endpoints of the main line for better visualization.
+     * @param {THREE.Vector3} start The starting point.
+     * @param {THREE.Vector3} end The ending point.
+     */
     addEndpointSpheres(start, end) {
         const sphereGeometry = new THREE.SphereGeometry(0.15, 16, 16);
         const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
@@ -194,6 +246,11 @@ class LinesProjection {
         this.sceneManager.addToSimulation(endSphere);
     }
 
+    /**
+     * Updates the information overlay with the current line analysis.
+     * @param {THREE.Vector3} start The starting point of the line.
+     * @param {THREE.Vector3} end The ending point of the line.
+     */
     updateInfo(start, end) {
         const actualLength = start.distanceTo(end);
         
@@ -211,6 +268,9 @@ class LinesProjection {
         `);
     }
 
+    /**
+     * Cleans up the topic by clearing all simulation objects.
+     */
     cleanup() {
         this.sceneManager.clearSimulation();
     }

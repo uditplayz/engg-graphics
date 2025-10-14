@@ -1,17 +1,43 @@
+/**
+ * @file Manages all UI-related interactions, DOM element manipulation, and event handling.
+ */
+
+/**
+ * @class UIManager
+ * @classdesc Handles the user interface, including the loader, sidebar, topic controls,
+ * and information overlays.
+ */
 class UIManager {
+    /**
+     * @constructor
+     * Caches references to key DOM elements.
+     */
     constructor() {
+        /** @type {HTMLElement} The main loading indicator. */
         this.loader = document.getElementById('loader');
+        /** @type {HTMLElement} The container for informational text. */
         this.infoOverlay = document.getElementById('info-overlay');
+        /** @type {HTMLElement} The container for topic-specific controls like sliders. */
         this.topicControls = document.getElementById('topic-controls');
+        /** @type {HTMLElement} The container for the list of topic buttons. */
         this.topicButtons = document.getElementById('topic-buttons');
+        /** @type {HTMLElement} The sidebar navigation panel. */
         this.sidebar = document.getElementById('sidebar');
+        /** @type {HTMLElement} The button to toggle the mobile menu. */
         this.menuToggle = document.getElementById('menu-toggle');
     }
 
+    /**
+     * Initializes the UI Manager by setting up event listeners.
+     */
     init() {
         this.setupMobileMenu();
     }
 
+    /**
+     * Sets up event listeners for the mobile sidebar menu.
+     * Handles opening, closing, and closing on outside clicks.
+     */
     setupMobileMenu() {
         this.menuToggle.addEventListener('click', () => {
             this.sidebar.classList.toggle('-translate-x-full');
@@ -35,18 +61,28 @@ class UIManager {
         });
     }
 
+    /**
+     * Hides the loading overlay.
+     */
     hideLoader() {
         if (this.loader) {
             this.loader.style.display = 'none';
         }
     }
 
+    /**
+     * Shows the loading overlay.
+     */
     showLoader() {
         if (this.loader) {
             this.loader.style.display = 'flex';
         }
     }
 
+    /**
+     * Displays a critical error message in the loader overlay, typically for initialization failures.
+     * @param {string} message The error message to display.
+     */
     showError(message) {
         if (this.loader) {
             this.loader.innerHTML = `
@@ -61,18 +97,33 @@ class UIManager {
         }
     }
 
+    /**
+     * Updates the content of the info overlay panel.
+     * @param {string} html The HTML content to set for the overlay.
+     */
     updateInfoOverlay(html) {
         this.infoOverlay.innerHTML = html;
     }
 
+    /**
+     * Clears all content from the topic-specific controls area.
+     */
     clearControls() {
         this.topicControls.innerHTML = '';
     }
 
+    /**
+     * Sets the content of the topic-specific controls area.
+     * @param {string} html The HTML content for the controls.
+     */
     setControls(html) {
         this.topicControls.innerHTML = html;
     }
 
+    /**
+     * Creates and populates the topic buttons in the sidebar.
+     * @param {Array<Object>} topics An array of topic objects, each with an 'id' and 'name'.
+     */
     createTopicButtons(topics) {
         this.topicButtons.innerHTML = topics.map(topic => `
             <button class="topic-button w-full text-left p-3 rounded-lg font-medium transition-all duration-200" 
@@ -82,6 +133,10 @@ class UIManager {
         `).join('');
     }
 
+    /**
+     * Sets the visual active state for a topic button.
+     * @param {string} topicId The ID of the topic to mark as active.
+     */
     setActiveButton(topicId) {
         document.querySelectorAll('.topic-button').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.topic === topicId);
@@ -93,7 +148,11 @@ class UIManager {
         }
     }
 
-    showError(message) {
+    /**
+     * Displays an error message within the main info overlay.
+     * @param {string} message The error message to display.
+     */
+    displayInfoError(message) {
         this.updateInfoOverlay(`
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                 <strong>Error:</strong> ${message}
@@ -101,6 +160,17 @@ class UIManager {
         `);
     }
 
+    /**
+     * Generates the HTML for a slider control.
+     * @param {object} params The parameters for the slider.
+     * @param {string} params.id The ID for the input element.
+     * @param {string} params.label The text label for the slider.
+     * @param {number} params.min The minimum value of the slider.
+     * @param {number} params.max The maximum value of the slider.
+     * @param {number} params.value The initial value of the slider.
+     * @param {number} params.step The step increment of the slider.
+     * @returns {string} The HTML string for the slider control.
+     */
     createSlider(params) {
         const { id, label, min, max, value, step } = params;
         return `

@@ -1,0 +1,219 @@
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js';
+
+class LinesProjection {
+    constructor(sceneManager, uiManager) {
+        this.sceneManager = sceneManager;
+        this.uiManager = uiManager;
+        this.params = {
+            x1: 2,
+            y1: 2,
+            z1: 1,
+            length: 6,
+            theta: 30, // Angle with HP
+            phi: 45    // Angle with VP
+        };
+    }
+
+    load() {
+        this.createControls();
+        this.updateVisualization();
+    }
+
+    createControls() {
+        const html = `
+            <h3 class="text-md font-semibold mb-3 text-slate-800">Line Projection Controls</h3>
+            <div class="bg-slate-50 p-3 rounded-lg mb-4">
+                <h4 class="text-sm font-semibold mb-2 text-slate-700">Starting Point</h4>
+                ${this.uiManager.createSlider({
+                    id: 'x1-slider',
+                    label: 'Start X',
+                    min: -8,
+                    max: 8,
+                    value: this.params.x1,
+                    step: 0.5
+                })}
+                ${this.uiManager.createSlider({
+                    id: 'y1-slider',
+                    label: 'Start Y',
+                    min: -8,
+                    max: 8,
+                    value: this.params.y1,
+                    step: 0.5
+                })}
+                ${this.uiManager.createSlider({
+                    id: 'z1-slider',
+                    label: 'Start Z',
+                    min: -8,
+                    max: 8,
+                    value: this.params.z1,
+                    step: 0.5
+                })}
+                
+                <h4 class="text-sm font-semibold mb-2 mt-4 text-slate-700">Line Properties</h4>
+                ${this.uiManager.createSlider({
+                    id: 'length-slider',
+                    label: 'Length',
+                    min: 1,
+                    max: 10,
+                    value: this.params.length,
+                    step: 0.5
+                })}
+                ${this.uiManager.createSlider({
+                    id: 'theta-slider',
+                    label: 'Angle with HP (θ°)',
+                    min: 0,
+                    max: 90,
+                    value: this.params.theta,
+                    step: 5
+                })}
+                ${this.uiManager.createSlider({
+                    id: 'phi-slider',
+                    label: 'Angle with VP (φ°)',
+                    min: 0,
+                    max: 90,
+                    value: this.params.phi,
+                    step: 5
+                })}
+            </div>
+            <div class="bg-green-50 border border-green-200 p-3 rounded-lg text-sm">
+                <p class="font-semibold text-green-800">Legend:</p>
+                <div class="mt-2 space-y-1">
+                    <div class="flex items-center">
+                        <span class="inline-block w-4 h-1 bg-red-600 mr-2"></span>
+                        <span class="text-green-700">Main Line</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="inline-block w-4 h-1 bg-green-600 mr-2"></span>
+                        <span class="text-green-700">Front View</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="inline-block w-4 h-1 bg-blue-600 mr-2"></span>
+                        <span class="text-green-700">Top View</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.uiManager.setControls(html);
+        this.attachEventListeners();
+    }
+
+    attachEventListeners() {
+        ['x1', 'y1', 'z1', 'length', 'theta', 'phi'].forEach(param => {
+            const slider = document.getElementById(`${param}-slider`);
+            const valueLabel = document.getElementById(`${param}-slider-value`);
+            
+            slider.addEventListener('input', (e) => {
+                this.params[param] = parseFloat(e.target.value);
+                valueLabel.textContent = this.params[param];
+                this.updateVisualization();
+            });
+        });
+    }
+
+    updateVisualization() {
+        this.sceneManager.clearSimulation();
+
+        // Calculate end point based on angles and length
+        const thetaRad = (this.params.theta * Math.PI) / 180;
+        const phiRad = (this.params.phi * Math.PI) / 180;
+
+        const dx = this.params.length * Math.cos(thetaRad) * Math.cos(phiRad);
+        const dy = this.params.length * Math.sin(thetaRad);
+        const dz = this.params.length * Math.cos(thetaRad) * Math.sin(phiRad);
+
+        const start = new THREE.Vector3(this.params.x1, this.params.y1, this.params.z1);
+        const end = new THREE.Vector3(
+            this.params.x1 + dx,
+            this.params.y1 + dy,
+            this.params.z1 + dz
+        );
+
+        // Main Line (Red)
+        this.createLine(start, end, 0xff0000, 3);
+
+        // Front View (Green) - projection on VP
+        const frontStart = new THREE.Vector3(start.x, start.y, 0);
+        const frontEnd = new THREE.Vector3(end.x, end.y, 0);
+        this.createLine(frontStart, frontEnd, 0x00ff00, 2);
+
+        // Top View (Blue) - projection on HP
+        const topStart = new THREE.Vector3(start.x, 0, start.z);
+        const topEnd = new THREE.Vector3(end.x, 0, end.z);
+        this.createLine(topStart, topEnd, 0x0000ff, 2);
+
+        // Projection lines (dashed)
+        this.createProjectionLines(start, end, frontStart, frontEnd, topStart, topEnd);
+
+        // Add spheres at endpoints
+        this.addEndpointSpheres(start, end);
+
+        this.updateInfo(start, end);
+    }
+
+    createLine(start, end, color, linewidth) {
+        const material = new THREE.LineBasicMaterial({ color, linewidth });
+        const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+        const line = new THREE.Line(geometry, material);
+        this.sceneManager.addToSimulation(line);
+    }
+
+    createProjectionLines(start, end, frontStart, frontEnd, topStart, topEnd) {
+        const lineMaterial = new THREE.LineDashedMaterial({
+            color: 0x888888,
+            dashSize: 0.15,
+            gapSize: 0.1
+        });
+
+        // Projections from main line to views
+        const points = [
+            [start, frontStart],
+            [start, topStart],
+            [end, frontEnd],
+            [end, topEnd]
+        ];
+
+        points.forEach(([p1, p2]) => {
+            const geometry = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+            const line = new THREE.Line(geometry, lineMaterial);
+            line.computeLineDistances();
+            this.sceneManager.addToSimulation(line);
+        });
+    }
+
+    addEndpointSpheres(start, end) {
+        const sphereGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+        const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+
+        const startSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        startSphere.position.copy(start);
+        this.sceneManager.addToSimulation(startSphere);
+
+        const endSphere = new THREE.Mesh(sphereGeometry, sphereMaterial.clone());
+        endSphere.position.copy(end);
+        this.sceneManager.addToSimulation(endSphere);
+    }
+
+    updateInfo(start, end) {
+        const actualLength = start.distanceTo(end);
+        
+        this.uiManager.updateInfoOverlay(`
+            <h4 class="font-bold text-slate-800">Line Analysis</h4>
+            <div class="mt-2 space-y-1 text-xs">
+                <div><b>Start:</b> (${start.x.toFixed(1)}, ${start.y.toFixed(1)}, ${start.z.toFixed(1)})</div>
+                <div><b>End:</b> (${end.x.toFixed(1)}, ${end.y.toFixed(1)}, ${end.z.toFixed(1)})</div>
+                <div><b>Length:</b> ${actualLength.toFixed(2)} units</div>
+                <div class="mt-2 pt-2 border-t border-slate-300">
+                    <div><b>Angle with HP (θ):</b> ${this.params.theta}°</div>
+                    <div><b>Angle with VP (φ):</b> ${this.params.phi}°</div>
+                </div>
+            </div>
+        `);
+    }
+
+    cleanup() {
+        this.sceneManager.clearSimulation();
+    }
+}
+
+export default LinesProjection;

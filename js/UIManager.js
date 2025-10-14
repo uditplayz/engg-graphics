@@ -36,11 +36,29 @@ class UIManager {
     }
 
     hideLoader() {
-        this.loader.style.display = 'none';
+        if (this.loader) {
+            this.loader.style.display = 'none';
+        }
     }
 
     showLoader() {
-        this.loader.style.display = 'flex';
+        if (this.loader) {
+            this.loader.style.display = 'flex';
+        }
+    }
+
+    showError(message) {
+        if (this.loader) {
+            this.loader.innerHTML = `
+                <div class="text-center">
+                    <div class="text-red-600 font-semibold mb-2">${message}</div>
+                    <button onclick="location.reload()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        Retry
+                    </button>
+                </div>
+            `;
+            this.loader.style.display = 'flex';
+        }
     }
 
     updateInfoOverlay(html) {

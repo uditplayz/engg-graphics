@@ -22,20 +22,32 @@ class SceneManager {
     }
 
     async init() {
-        this.setupScene();
-        this.setupCamera();
-        this.setupRenderer();
-        this.setupLighting();
-        this.setupControls();
-        this.setupRaycaster();
-        
-        this.scene.add(this.simulationObjects);
-        
-        this.createBasePlanes();
-        await this.loadFont();
-        this.createAxisLabels();
-        
-        this.animate();
+        try {
+            this.setupScene();
+            this.setupCamera();
+            this.setupRenderer();
+            this.setupLighting();
+            this.setupControls();
+            this.setupRaycaster();
+            
+            this.scene.add(this.simulationObjects);
+            
+            this.createBasePlanes();
+            
+            // Start animation before loading font to show something on screen
+            this.animate();
+            
+            // Load font in background
+            this.loadFont().then(() => {
+                this.createAxisLabels();
+            }).catch(err => {
+                console.warn('Font loading failed:', err);
+                // Continue without labels if font fails
+            });
+        } catch (error) {
+            console.error('SceneManager initialization failed:', error);
+            throw error;
+        }
     }
 
     setupScene() {
@@ -51,7 +63,11 @@ class SceneManager {
     }
 
     setupRenderer() {
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            powerPreference: "high-performance",
+            failIfMajorPerformanceCaveat: true
+        });
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.container.appendChild(this.renderer.domElement);
@@ -207,9 +223,38 @@ class SceneManager {
     }
 
     animate() {
-        requestAnimationFrame(() => this.animate());
-        this.controls.update();
+        if (!this.renderer || !this.scene || !this.camera) return;
+        
+        this.animationFrameId = requestAnimationFrame(() => this.animate());
+        
+        if (this.controls) {
+            this.controls.update();
+        }
+        
         this.renderer.render(this.scene, this.camera);
+    }
+
+    cleanup() {
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+        }
+
+        if (this.controls) {
+            this.controls.dispose();
+        }
+
+        if (this.renderer) {
+            this.renderer.dispose();
+            if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+                this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+            }
+        }
+
+        // Clear references
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
     }
 }
 

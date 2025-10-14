@@ -11,13 +11,21 @@ class Application {
 
     async init() {
         try {
-            // Initialize UI Manager
+            // Initialize UI Manager first
             this.uiManager = new UIManager();
             this.uiManager.init();
 
-            // Initialize Scene Manager
+            // Check WebGL support
+            if (!this.checkWebGLSupport()) {
+                throw new Error('WebGL not supported');
+            }
+
+            // Initialize Scene Manager with error handling
             this.sceneManager = new SceneManager('canvas-container');
-            await this.sceneManager.init();
+            await this.sceneManager.init().catch(error => {
+                console.error('Scene initialization failed:', error);
+                throw new Error('Failed to initialize 3D environment');
+            });
 
             // Initialize Topic Manager
             this.topicManager = new TopicManager(this.sceneManager, this.uiManager);
@@ -26,7 +34,7 @@ class Application {
             // Set up event listeners
             this.setupEventListeners();
 
-            // Hide loader
+            // Hide loader only after everything is ready
             this.uiManager.hideLoader();
 
             // Load welcome topic by default
@@ -34,7 +42,22 @@ class Application {
 
         } catch (error) {
             console.error('Failed to initialize application:', error);
-            this.uiManager.showError('Failed to initialize 3D environment');
+            // Show user-friendly error message
+            if (error.message === 'WebGL not supported') {
+                this.uiManager.showError('Your browser does not support 3D graphics. Please try a modern browser.');
+            } else {
+                this.uiManager.showError('Failed to initialize 3D environment. Please refresh the page.');
+            }
+        }
+    }
+
+    checkWebGLSupport() {
+        try {
+            const canvas = document.createElement('canvas');
+            return !!(window.WebGLRenderingContext && 
+                (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+        } catch (e) {
+            return false;
         }
     }
 

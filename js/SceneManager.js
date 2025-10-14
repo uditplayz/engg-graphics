@@ -163,7 +163,7 @@ class SceneManager {
         return new Promise((resolve, reject) => {
             const fontLoader = new FontLoader();
             fontLoader.load(
-                'https://threejs.org/examples/fonts/helvetiker_regular.typeface.json',
+                './fonts/helvetiker_regular.typeface.json',
                 (font) => {
                     this.font = font;
                     resolve(font);

@@ -1,26 +1,58 @@
+/**
+ * @file Manages the Three.js scene, including setup, rendering, and interaction.
+ */
+
 import * as THREE from '../libs/three.module.js';
 import { OrbitControls } from '../libs/examples/jsm/controls/OrbitControls.js';
 import { FontLoader } from '../libs/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from '../libs/examples/jsm/geometries/TextGeometry.js';
 
+/**
+ * @class SceneManager
+ * @classdesc Handles all aspects of the 3D scene, including camera, lighting, rendering,
+ * and the base environment for simulations.
+ */
 class SceneManager {
+    /**
+     * @constructor
+     * @param {string} containerID The ID of the DOM element to contain the canvas.
+     */
     constructor(containerID) {
+        /** @type {string} The ID of the container element. */
         this.containerID = containerID;
+        /** @type {HTMLElement} The container DOM element. */
         this.container = document.getElementById(containerID);
         
+        /** @type {THREE.Scene|null} The main Three.js scene. */
         this.scene = null;
+        /** @type {THREE.PerspectiveCamera|null} The camera for viewing the scene. */
         this.camera = null;
+        /** @type {THREE.WebGLRenderer|null} The renderer for the scene. */
         this.renderer = null;
+        /** @type {OrbitControls|null} The camera controls for user interaction. */
         this.controls = null;
+        /** @type {THREE.Raycaster|null} Used for mouse picking and interaction. */
         this.raycaster = null;
+        /** @type {THREE.Vector2|null} Stores normalized mouse coordinates. */
         this.mouse = null;
         
-        this.hp = null; // Horizontal Plane
-        this.vp = null; // Vertical Plane
+        /** @type {THREE.Mesh|null} The horizontal plane (HP). */
+        this.hp = null;
+        /** @type {THREE.Mesh|null} The vertical plane (VP). */
+        this.vp = null;
+        /** @type {THREE.Group} A group to hold all topic-specific 3D objects. */
         this.simulationObjects = new THREE.Group();
+        /** @type {Font|null} The loaded font for creating text geometries. */
         this.font = null;
     }
 
+    /**
+     * Initializes the entire 3D scene.
+     * Sets up the scene, camera, renderer, lighting, controls, and base planes.
+     * @async
+     * @returns {Promise<void>} A promise that resolves when the scene is set up.
+     * @throws {Error} If initialization fails.
+     */
     async init() {
         try {
             this.setupScene();
@@ -50,11 +82,17 @@ class SceneManager {
         }
     }
 
+    /**
+     * Creates and configures the Three.js scene.
+     */
     setupScene() {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xedf2f7);
     }
 
+    /**
+     * Creates and configures the perspective camera.
+     */
     setupCamera() {
         const aspect = this.container.clientWidth / this.container.clientHeight;
         this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
@@ -62,6 +100,9 @@ class SceneManager {
         this.camera.lookAt(0, 0, 0);
     }
 
+    /**
+     * Creates and configures the WebGL renderer.
+     */
     setupRenderer() {
         this.renderer = new THREE.WebGLRenderer({ 
             antialias: true,
@@ -73,6 +114,9 @@ class SceneManager {
         this.container.appendChild(this.renderer.domElement);
     }
 
+    /**
+     * Adds lighting to the scene.
+     */
     setupLighting() {
         // Ambient light
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
@@ -84,6 +128,9 @@ class SceneManager {
         this.scene.add(directionalLight);
     }
 
+    /**
+     * Sets up the OrbitControls for camera manipulation.
+     */
     setupControls() {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
@@ -101,11 +148,17 @@ class SceneManager {
         this.controls.maxDistance = 100;
     }
 
+    /**
+     * Initializes the raycaster for mouse interactions.
+     */
     setupRaycaster() {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
     }
 
+    /**
+     * Creates the base horizontal and vertical planes (HP and VP).
+     */
     createBasePlanes() {
         const planeMaterial = new THREE.MeshStandardMaterial({
             color: 0x99aaff,
@@ -139,6 +192,9 @@ class SceneManager {
         this.createAxisLines();
     }
 
+    /**
+     * Creates the X, Y, and Z axis lines.
+     */
     createAxisLines() {
         const axisMaterial = new THREE.LineBasicMaterial({ color: 0x2d3748, linewidth: 2 });
         
@@ -159,6 +215,11 @@ class SceneManager {
         this.scene.add(axisLines);
     }
 
+    /**
+     * Loads the font required for text geometries.
+     * @async
+     * @returns {Promise<Font>} A promise that resolves with the loaded font.
+     */
     async loadFont() {
         return new Promise((resolve, reject) => {
             const fontLoader = new FontLoader();
@@ -174,10 +235,19 @@ class SceneManager {
         });
     }
 
+    /**
+     * Creates and adds axis labels (X, Y, Z) to the scene.
+     */
     createAxisLabels() {
         if (!this.font) return;
 
         const textMaterial = new THREE.MeshBasicMaterial({ color: 0x1a202c });
+        /**
+         * Helper function to create a text mesh.
+         * @param {string} text - The text to display.
+         * @param {THREE.Vector3} position - The position of the text.
+         * @returns {THREE.Mesh} The created text mesh.
+         */
         const createText = (text, position) => {
             const geometry = new TextGeometry(text, {
                 font: this.font,
@@ -197,6 +267,9 @@ class SceneManager {
         this.scene.add(createText('-Z', new THREE.Vector3(0, 0, -11)));
     }
 
+    /**
+     * Clears all objects from the simulation group, ensuring proper memory disposal.
+     */
     clearSimulation() {
         while (this.simulationObjects.children.length > 0) {
             const object = this.simulationObjects.children[0];
@@ -212,16 +285,26 @@ class SceneManager {
         }
     }
 
+    /**
+     * Adds a 3D object to the simulation group.
+     * @param {THREE.Object3D} object The object to add.
+     */
     addToSimulation(object) {
         this.simulationObjects.add(object);
     }
 
+    /**
+     * Handles window resize events to keep the viewport and camera aspect ratio correct.
+     */
     onWindowResize() {
         this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
     }
 
+    /**
+     * The main animation loop. Renders the scene and updates controls.
+     */
     animate() {
         if (!this.renderer || !this.scene || !this.camera) return;
         
@@ -234,6 +317,9 @@ class SceneManager {
         this.renderer.render(this.scene, this.camera);
     }
 
+    /**
+     * Cleans up resources to prevent memory leaks.
+     */
     cleanup() {
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);

@@ -1,9 +1,29 @@
+/**
+ * @file Contains the WelcomeTopic class which displays the initial welcome screen.
+ */
+
+/**
+ * @class WelcomeTopic
+ * @classdesc A topic module that shows a welcome message, instructions,
+ * and general information about the application.
+ */
 class WelcomeTopic {
+    /**
+     * @constructor
+     * @param {SceneManager} sceneManager An instance of the SceneManager.
+     * @param {UIManager} uiManager An instance of the UIManager.
+     */
     constructor(sceneManager, uiManager) {
+        /** @type {SceneManager} Reference to the SceneManager. */
         this.sceneManager = sceneManager;
+        /** @type {UIManager} Reference to the UIManager. */
         this.uiManager = uiManager;
     }
 
+    /**
+     * Loads the welcome message into the UI panels.
+     * This method sets the content for the main controls area and the info overlay.
+     */
     load() {
         this.uiManager.setControls(`
             <div class="p-4 rounded-lg bg-indigo-50 border border-indigo-200">
@@ -36,6 +56,9 @@ class WelcomeTopic {
         `);
     }
 
+    /**
+     * Cleans up the topic. For the welcome topic, no cleanup is necessary.
+     */
     cleanup() {
         // No cleanup needed for welcome screen
     }
